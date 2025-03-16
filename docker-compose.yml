@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  dfx:
+    image: ubuntu:latest
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    # Use DFX https://sdk.dfinity.org/install.sh
+    command: bash -c "curl -fsSL https://internetcomputer.org/install.sh | sh && /root/.local/share/dfinity/bin/dfx start --background"
+    environment:
+      - PATH=/root/.local/share/dfinity/bin:$PATH
+    ports:
+      - "8000:8000" # Expose the DFX replica port
+      - "4943:4943" # Expose the DFX replica port
+  node:
+    image: node:18 # Or your preferred Node.js version
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    depends_on:
+      - dfx # Ensure dfx service starts first
+    command: bash -c "while ! nc -z dfx 4943; do sleep 1; done; npm install; bash" # waits for dfx replica to start.
